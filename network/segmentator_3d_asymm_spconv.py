@@ -44,6 +44,12 @@ def conv1x1(in_planes, out_planes, stride=1, indice_key=None):
 
 
 class ResContextBlock(nn.Module):
+    """
+
+    Asymmetrical Residual Block
+
+    """
+
     def __init__(self, in_filters, out_filters, kernel_size=(3, 3, 3), stride=1, indice_key=None):
         super(ResContextBlock, self).__init__()
         self.conv1 = conv1x3(in_filters, out_filters, indice_key=indice_key + "bef")
@@ -213,6 +219,12 @@ class UpBlock(nn.Module):
 
 
 class ReconBlock(nn.Module):
+    """
+
+    Dimension Decomposition Based Context Modeling module
+
+    """
+    
     def __init__(self, in_filters, out_filters, kernel_size=(3, 3, 3), stride=1, indice_key=None):
         super(ReconBlock, self).__init__()
         self.conv1 = conv3x1x1(in_filters, out_filters, indice_key=indice_key + "bef")
@@ -247,6 +259,11 @@ class ReconBlock(nn.Module):
 
 
 class Asymm_3d_spconv(nn.Module):
+    """
+
+    The whole U-Net-like structure
+
+    """
     def __init__(self,
                  output_shape,
                  use_norm=True,
@@ -261,6 +278,7 @@ class Asymm_3d_spconv(nn.Module):
         # sparse_shape[0] = 11
         print(sparse_shape)
         self.sparse_shape = sparse_shape
+
 
         self.downCntx = ResContextBlock(num_input_features, init_size, indice_key="pre")
         self.resBlock2 = ResBlock(init_size, 2 * init_size, 0.2, height_pooling=True, indice_key="down2")

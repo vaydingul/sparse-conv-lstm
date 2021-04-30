@@ -11,6 +11,11 @@ import torch_scatter
 
 
 class cylinder_fea(nn.Module):
+    """
+    
+    Point cloud feature extractor module.
+
+    """
 
     def __init__(self, grid_size, fea_dim=3,
                  out_pt_fea_dim=64, max_pt_per_encode=64, fea_compre=None):
