@@ -261,6 +261,8 @@ class ReconBlock(nn.Module):
 class Asymm_3d_spconv(nn.Module):
     """
 
+    Asymmetrical 3D Sparse Convolution Network
+
     The whole U-Net-like structure
 
     """

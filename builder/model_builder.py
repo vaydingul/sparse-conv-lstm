@@ -1,6 +1,6 @@
 # -*- coding:utf-8 -*-
 # author: Xinge
-# @file: model_builder.py 
+# @file: model_builder.py
 
 from network.cylinder_spconv_3d import get_model_class
 from network.segmentator_3d_asymm_spconv import Asymm_3d_spconv
@@ -16,6 +16,7 @@ def build(model_config):
     fea_dim = model_config['fea_dim']
     out_fea_dim = model_config['out_fea_dim']
 
+    # Asymmetrical 3D Sparse Convolution Network
     cylinder_3d_spconv_seg = Asymm_3d_spconv(
         output_shape=output_shape,
         use_norm=use_norm,
@@ -23,6 +24,7 @@ def build(model_config):
         init_size=init_size,
         nclasses=num_class)
 
+    
     cy_fea_net = cylinder_fea(grid_size=output_shape,
                               fea_dim=fea_dim,
                               out_pt_fea_dim=out_fea_dim,

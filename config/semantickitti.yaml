@@ -6,6 +6,7 @@ format_version: 4
 model_params:
   model_architecture: "cylinder_asym"
 
+  # Grid size of each voxel
   output_shape:
     - 240
     - 180
@@ -13,11 +14,12 @@ model_params:
 
   fea_dim: 9
   out_fea_dim: 256
+
+  # Number of classes
   num_class: 20
   num_input_features: 16
   use_norm: True
   init_size: 16
-
 
 ###################
 ## Dataset options
@@ -37,7 +39,6 @@ dataset_params:
     - -3.1415926
     - -4
 
-
 ###################
 ## Data_loader options
 train_data_loader:
@@ -55,7 +56,6 @@ val_data_loader:
   batch_size: 1
   shuffle: False
   num_workers: 0
-
 
 ###################
 ## Train params

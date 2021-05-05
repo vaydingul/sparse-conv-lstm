@@ -129,6 +129,7 @@ def main(args):
                       (np.mean(val_loss_list)))
                 #* #############################################################################
 
+            #* ##################################### TRAINING ROUTINE ##########################
             train_pt_fea_ten = [torch.from_numpy(i).type(
                 torch.FloatTensor).to(pytorch_device) for i in train_pt_fea]
             # train_grid_ten = [torch.from_numpy(i[:,:2]).to(pytorch_device) for i in train_grid]
@@ -164,6 +165,8 @@ def main(args):
                     print('loss error')
         pbar.close()
         epoch += 1
+
+        #* #############################################################################
 
 
 if __name__ == '__main__':
