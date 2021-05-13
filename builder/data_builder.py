@@ -1,6 +1,6 @@
 # -*- coding:utf-8 -*-
 # author: Xinge
-# @file: data_builder.py 
+# @file: data_builder.py
 
 import torch
 from dataloader.dataset_semantickitti import get_model_class, collate_fn_BEV
@@ -11,26 +11,40 @@ def build(dataset_config,
           train_dataloader_config,
           val_dataloader_config,
           grid_size=[480, 360, 32]):
+
+    # The dataset directory
     data_path = train_dataloader_config["data_path"]
+    # Marker for train set
     train_imageset = train_dataloader_config["imageset"]
+    # Marker for validation set
     val_imageset = val_dataloader_config["imageset"]
+    # ?
     train_ref = train_dataloader_config["return_ref"]
     val_ref = val_dataloader_config["return_ref"]
 
+    # Label mapping directory
     label_mapping = dataset_config["label_mapping"]
 
+    # Which dataset architecture will be used, e.g. ´SemKITTI_sk´
     SemKITTI = get_pc_model_class(dataset_config['pc_dataset_type'])
 
-    nusc=None
+    # Special care for NuScenes dataset
+    nusc = None
     if "nusc" in dataset_config['pc_dataset_type']:
         from nuscenes import NuScenes
-        nusc = NuScenes(version='v1.0-trainval', dataroot=data_path, verbose=True)
+        nusc = NuScenes(version='v1.0-trainval',
+                        dataroot=data_path, verbose=True)
 
+    # Based on the selected dataset architecture, load the necessary files
     train_pt_dataset = SemKITTI(data_path, imageset=train_imageset,
                                 return_ref=train_ref, label_mapping=label_mapping, nusc=nusc)
     val_pt_dataset = SemKITTI(data_path, imageset=val_imageset,
                               return_ref=val_ref, label_mapping=label_mapping, nusc=nusc)
 
+    # Based on the data modality, return the pre-processing 
+    # applied form of the dataloader. For example, 
+    # voxel representation, and cylindrical representation
+    # requires different types of pre-processing on the data
     train_dataset = get_model_class(dataset_config['dataset_type'])(
         train_pt_dataset,
         grid_size=grid_size,

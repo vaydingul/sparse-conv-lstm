@@ -1,7 +1,8 @@
 # -*- coding:utf-8 -*-
 # author: Xinge
-# @file: pc_dataset.py 
+# @file: pc_dataset.py
 
+from os.path import join
 import os
 import numpy as np
 from torch.utils import data
@@ -31,10 +32,16 @@ class SemKITTI_sk(data.Dataset):
     def __init__(self, data_path, imageset='train',
                  return_ref=False, label_mapping="semantic-kitti.yaml", nusc=None):
         self.return_ref = return_ref
+        
+        # Open the config file
         with open(label_mapping, 'r') as stream:
             semkittiyaml = yaml.safe_load(stream)
+        
+        # ?
         self.learning_map = semkittiyaml['learning_map']
+
         self.imageset = imageset
+        # Which set will be fetched?
         if imageset == 'train':
             split = semkittiyaml['split']['train']
         elif imageset == 'val':
@@ -44,25 +51,43 @@ class SemKITTI_sk(data.Dataset):
         else:
             raise Exception('Split must be train/val/test')
 
+        # Construct the smallest element of the dataset, file-by-file
         self.im_idx = []
         for i_folder in split:
-            self.im_idx += absoluteFilePaths('/'.join([data_path, str(i_folder).zfill(2), 'velodyne']))
+            self.im_idx += absoluteFilePaths(
+                '/'.join([data_path, str(i_folder).zfill(2), 'velodyne']))
 
     def __len__(self):
-        'Denotes the total number of samples'
+        
+        # Denotes the total number of samples
         return len(self.im_idx)
 
-    def __getitem__(self, index):       
-        raw_data = np.fromfile(self.im_idx[index], dtype=np.float32).reshape((-1, 4))
+    def __getitem__(self, index):
+
+        # Read the raw binary file
+        raw_data = np.fromfile(
+            self.im_idx[index], dtype=np.float32).reshape((-1, 4))
+
         if self.imageset == 'test':
-            annotated_data = np.expand_dims(np.zeros_like(raw_data[:, 0], dtype=int), axis=1)
+            annotated_data = np.expand_dims(
+                np.zeros_like(raw_data[:, 0], dtype=int), axis=1)
         else:
+            # To read the labels, replace ".bin" with ".labels"
             annotated_data = np.fromfile(self.im_idx[index].replace('velodyne', 'labels')[:-3] + 'label',
                                          dtype=np.int32).reshape((-1, 1))
+            # ?
             annotated_data = annotated_data & 0xFFFF  # delete high 16 digits binary
-            annotated_data = np.vectorize(self.learning_map.__getitem__)(annotated_data)
+            #
+            #  Make the label formatting such that, 
+            # number from 0-19 represent the label
+            annotated_data = np.vectorize(
+                self.learning_map.__getitem__)(annotated_data)
 
+        # Make it everything as one tuple
         data_tuple = (raw_data[:, :3], annotated_data.astype(np.uint8))
+        
+        # ? If return_ref, then return also the last element of the point cloud data
+        # ? Signal strength-like thing
         if self.return_ref:
             data_tuple += (raw_data[:, 3],)
         return data_tuple
@@ -92,13 +117,17 @@ class SemKITTI_nusc(data.Dataset):
     def __getitem__(self, index):
         info = self.nusc_infos[index]
         lidar_path = info['lidar_path'][16:]
-        lidar_sd_token = self.nusc.get('sample', info['token'])['data']['LIDAR_TOP']
+        lidar_sd_token = self.nusc.get('sample', info['token'])[
+            'data']['LIDAR_TOP']
         lidarseg_labels_filename = os.path.join(self.nusc.dataroot,
                                                 self.nusc.get('lidarseg', lidar_sd_token)['filename'])
 
-        points_label = np.fromfile(lidarseg_labels_filename, dtype=np.uint8).reshape([-1, 1])
-        points_label = np.vectorize(self.learning_map.__getitem__)(points_label)
-        points = np.fromfile(os.path.join(self.data_path, lidar_path), dtype=np.float32, count=-1).reshape([-1, 5])
+        points_label = np.fromfile(
+            lidarseg_labels_filename, dtype=np.uint8).reshape([-1, 1])
+        points_label = np.vectorize(
+            self.learning_map.__getitem__)(points_label)
+        points = np.fromfile(os.path.join(
+            self.data_path, lidar_path), dtype=np.float32, count=-1).reshape([-1, 5])
 
         data_tuple = (points[:, :3], points_label.astype(np.uint8))
         if self.return_ref:
@@ -125,10 +154,10 @@ def SemKITTI2train_single(label):
     label[remove_ind] = 255
     return label
 
-from os.path import join
+
 @register_dataset
 class SemKITTI_sk_multiscan(data.Dataset):
-    def __init__(self, data_path, imageset='train',return_ref=False, label_mapping="semantic-kitti-multiscan.yaml"):
+    def __init__(self, data_path, imageset='train', return_ref=False, label_mapping="semantic-kitti-multiscan.yaml"):
         self.return_ref = return_ref
         with open(label_mapping, 'r') as stream:
             semkittiyaml = yaml.safe_load(stream)
@@ -144,7 +173,7 @@ class SemKITTI_sk_multiscan(data.Dataset):
         else:
             raise Exception('Split must be train/val/test')
 
-        multiscan = 2 # additional two frames are fused with target-frame. Hence, 3 point clouds in total
+        multiscan = 2  # additional two frames are fused with target-frame. Hence, 3 point clouds in total
         self.multiscan = multiscan
         self.im_idx = []
 
@@ -155,8 +184,8 @@ class SemKITTI_sk_multiscan(data.Dataset):
         self.load_calib_poses()
 
         for i_folder in split:
-            self.im_idx += absoluteFilePaths('/'.join([data_path, str(i_folder).zfill(2), 'velodyne']))
-
+            self.im_idx += absoluteFilePaths(
+                '/'.join([data_path, str(i_folder).zfill(2), 'velodyne']))
 
     def __len__(self):
         'Denotes the total number of samples'
@@ -179,13 +208,16 @@ class SemKITTI_sk_multiscan(data.Dataset):
             seq_folder = join(self.data_path, str(seq).zfill(2))
 
             # Read Calib
-            self.calibrations.append(self.parse_calibration(join(seq_folder, "calib.txt")))
+            self.calibrations.append(
+                self.parse_calibration(join(seq_folder, "calib.txt")))
 
             # Read times
-            self.times.append(np.loadtxt(join(seq_folder, 'times.txt'), dtype=np.float32))
+            self.times.append(np.loadtxt(
+                join(seq_folder, 'times.txt'), dtype=np.float32))
 
             # Read poses
-            poses_f64 = self.parse_poses(join(seq_folder, 'poses.txt'), self.calibrations[-1])
+            poses_f64 = self.parse_poses(
+                join(seq_folder, 'poses.txt'), self.calibrations[-1])
             self.poses.append([pose.astype(np.float32) for pose in poses_f64])
 
     def parse_calibration(self, filename):
@@ -254,16 +286,19 @@ class SemKITTI_sk_multiscan(data.Dataset):
         new_points = new_points[:, :3]
         new_coords = new_points - pose0[:3, 3]
         # new_coords = new_coords.dot(pose0[:3, :3])
-        new_coords = np.sum(np.expand_dims(new_coords, 2) * pose0[:3, :3], axis=1)
+        new_coords = np.sum(np.expand_dims(new_coords, 2)
+                            * pose0[:3, :3], axis=1)
         new_coords = np.hstack((new_coords, points[:, 3:]))
 
         return new_coords
 
     def __getitem__(self, index):
-        raw_data = np.fromfile(self.im_idx[index], dtype=np.float32).reshape((-1, 4))
+        raw_data = np.fromfile(
+            self.im_idx[index], dtype=np.float32).reshape((-1, 4))
         origin_len = len(raw_data)
         if self.imageset == 'test':
-            annotated_data = np.expand_dims(np.zeros_like(raw_data[:, 0], dtype=int), axis=1)
+            annotated_data = np.expand_dims(
+                np.zeros_like(raw_data[:, 0], dtype=int), axis=1)
         else:
             annotated_data = np.fromfile(self.im_idx[index].replace('velodyne', 'labels')[:-3] + 'label',
                                          dtype=np.int32).reshape((-1, 1))
@@ -282,11 +317,15 @@ class SemKITTI_sk_multiscan(data.Dataset):
 
                 pose = self.poses[dir_idx][number_idx - plus_idx]
 
-                newpath2 = self.im_idx[index][:-10] + str(number_idx - plus_idx).zfill(6) + self.im_idx[index][-4:]
-                raw_data2 = np.fromfile(newpath2, dtype=np.float32).reshape((-1, 4))
+                newpath2 = self.im_idx[index][:-10] + \
+                    str(number_idx - plus_idx).zfill(6) + \
+                    self.im_idx[index][-4:]
+                raw_data2 = np.fromfile(
+                    newpath2, dtype=np.float32).reshape((-1, 4))
 
                 if self.imageset == 'test':
-                    annotated_data2 = np.expand_dims(np.zeros_like(raw_data2[:, 0], dtype=int), axis=1)
+                    annotated_data2 = np.expand_dims(
+                        np.zeros_like(raw_data2[:, 0], dtype=int), axis=1)
                 else:
                     annotated_data2 = np.fromfile(newpath2.replace('velodyne', 'labels')[:-3] + 'label',
                                                   dtype=np.int32).reshape((-1, 1))
@@ -296,15 +335,17 @@ class SemKITTI_sk_multiscan(data.Dataset):
 
                 if len(raw_data2) != 0:
                     raw_data = np.concatenate((raw_data, raw_data2), 0)
-                    annotated_data = np.concatenate((annotated_data, annotated_data2), 0)
+                    annotated_data = np.concatenate(
+                        (annotated_data, annotated_data2), 0)
 
-        annotated_data = np.vectorize(self.learning_map.__getitem__)(annotated_data)
+        annotated_data = np.vectorize(
+            self.learning_map.__getitem__)(annotated_data)
 
         data_tuple = (raw_data[:, :3], annotated_data.astype(np.uint8))
 
         if self.return_ref:
-            data_tuple += (raw_data[:, 3], origin_len) # origin_len is used to indicate the length of target-scan
-
+            # origin_len is used to indicate the length of target-scan
+            data_tuple += (raw_data[:, 3], origin_len)
 
         return data_tuple
 
@@ -316,7 +357,8 @@ def get_SemKITTI_label_name(label_mapping):
         semkittiyaml = yaml.safe_load(stream)
     SemKITTI_label_name = dict()
     for i in sorted(list(semkittiyaml['learning_map'].keys()))[::-1]:
-        SemKITTI_label_name[semkittiyaml['learning_map'][i]] = semkittiyaml['labels'][i]
+        SemKITTI_label_name[semkittiyaml['learning_map']
+                            [i]] = semkittiyaml['labels'][i]
 
     return SemKITTI_label_name
 

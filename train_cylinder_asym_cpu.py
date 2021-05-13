@@ -16,50 +16,83 @@ from config.config import load_config_data
 from utils.load_save_util import load_checkpoint
 
 import warnings
-
 warnings.filterwarnings("ignore")
 
 
 def main(args):
+    # Device is CPU since it is a local mahcine
     pytorch_device = torch.device('cpu')
 
+    # It is the input given to the main script:
+    # the directory of the config.yaml
     config_path = args.config_path
-
+    
+    # Load the configs 
     configs = load_config_data(config_path)
 
+    # The ´dataset_params´ section of the config file
     dataset_config = configs['dataset_params']
+
+    # The ´train_data_loader´ section of the config file
     train_dataloader_config = configs['train_data_loader']
+
+    # The ´val_data_loader´ section of the config file
     val_dataloader_config = configs['val_data_loader']
 
+    # Validation set batch size
     val_batch_size = val_dataloader_config['batch_size']
+
+    # Train set batch size
     train_batch_size = train_dataloader_config['batch_size']
 
+    # The ´model_params´ section of the config file
     model_config = configs['model_params']
+
+    # The ´train_params´ section of the config file
     train_hypers = configs['train_params']
 
+    # Grid size of each voxel
     grid_size = model_config['output_shape']
+    # Number of classes/categories
     num_class = model_config['num_class']
+    # Whether the labels will be ignored or not
     ignore_label = dataset_config['ignore_label']
 
+    # The pretrained model loading directory
     model_load_path = train_hypers['model_load_path']
+    # The pretrained model saving directory
     model_save_path = train_hypers['model_save_path']
 
+    # The directory of the labeling config file
     SemKITTI_label_name = get_SemKITTI_label_name(
         dataset_config["label_mapping"])
+
+    # Integer corresponding to the unique labels
     unique_label = np.asarray(sorted(list(SemKITTI_label_name.keys())))[1:] - 1
+    # String representation of the labels
     unique_label_str = [SemKITTI_label_name[x] for x in unique_label + 1]
 
+    # Build the initial model
     my_model = model_builder.build(model_config)
+
+    # If there is a predefined one in the loading path,
+    # then fetch it.
     if os.path.exists(model_load_path):
         my_model = load_checkpoint(model_load_path, my_model)
 
+    # Transmit to the current device
     my_model.to(pytorch_device)
+
+    # Construct the optimizer settings
     optimizer = optim.Adam(my_model.parameters(),
+                            # Learning rate
                            lr=train_hypers["learning_rate"])
 
+    # Loss function configuration
     loss_func, lovasz_softmax = loss_builder.build(wce=True, lovasz=True,
                                                    num_class=num_class, ignore_label=ignore_label)
 
+    # Dataset builder, both train and validation set.
     train_dataset_loader, val_dataset_loader = data_builder.build(dataset_config,
                                                                   train_dataloader_config,
                                                                   val_dataloader_config,
