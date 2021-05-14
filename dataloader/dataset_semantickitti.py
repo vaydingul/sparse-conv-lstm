@@ -397,7 +397,7 @@ class cylinder_dataset(data.Dataset):
         else:
 
             #  Return final output as:
-            # (Grid indeces, corresponding label for each grid, partial output)
+            # (Voxel position, processed label, grid indices, corresponding label for each grid, partial output)
             data_tuple += (grid_ind, labels, return_fea)
         return data_tuple
 

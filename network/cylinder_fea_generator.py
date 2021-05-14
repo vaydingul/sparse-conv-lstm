@@ -59,8 +59,7 @@ class cylinder_fea(nn.Module):
 
     def forward(self, pt_fea, xy_ind):
         """
-
-
+        
         xy_ind = X-Y-Z coordinated of each point as integers.
         """
         cur_dev = pt_fea[0].get_device()
