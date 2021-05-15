@@ -11,6 +11,7 @@ def build(model_config):
 
     # Grid size of each voxel
     output_shape = model_config['output_shape']
+    
     # Number classes/categories
     num_class = model_config['num_class']
     # Number of input features

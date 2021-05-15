@@ -52,18 +52,24 @@ class ResContextBlock(nn.Module):
 
     def __init__(self, in_filters, out_filters, kernel_size=(3, 3, 3), stride=1, indice_key=None):
         super(ResContextBlock, self).__init__()
+
+
+        #! 1 x 3 x 3
         self.conv1 = conv1x3(in_filters, out_filters, indice_key=indice_key + "bef")
         self.bn0 = nn.BatchNorm1d(out_filters)
         self.act1 = nn.LeakyReLU()
 
+        #! 3 x 1 x 3
         self.conv1_2 = conv3x1(out_filters, out_filters, indice_key=indice_key + "bef")
         self.bn0_2 = nn.BatchNorm1d(out_filters)
         self.act1_2 = nn.LeakyReLU()
 
+        #! 3 x 1 x 3
         self.conv2 = conv3x1(in_filters, out_filters, indice_key=indice_key + "bef")
         self.act2 = nn.LeakyReLU()
         self.bn1 = nn.BatchNorm1d(out_filters)
 
+        #! 1 x 3 x 3
         self.conv3 = conv1x3(out_filters, out_filters, indice_key=indice_key + "bef")
         self.act3 = nn.LeakyReLU()
         self.bn2 = nn.BatchNorm1d(out_filters)
@@ -71,36 +77,62 @@ class ResContextBlock(nn.Module):
         self.weight_initialization()
 
     def weight_initialization(self):
+
+        """
+
+        Assign constant initial weight and bias to the
+        BatchNorm1d module.
+
+        """
+
         for m in self.modules():
+
             if isinstance(m, nn.BatchNorm1d):
                 nn.init.constant_(m.weight, 1)
                 nn.init.constant_(m.bias, 0)
 
     def forward(self, x):
+
+        # Process input in (1 x 3 x 3) sparse convolution module
         shortcut = self.conv1(x)
         shortcut.features = self.act1(shortcut.features)
         shortcut.features = self.bn0(shortcut.features)
 
+        # Process the output of above layer in 
+        # (3 x 1 x 3) sparse convolution module
         shortcut = self.conv1_2(shortcut)
         shortcut.features = self.act1_2(shortcut.features)
         shortcut.features = self.bn0_2(shortcut.features)
 
+        # Process input in (3 x 1 x 3) sparse convolution module
         resA = self.conv2(x)
         resA.features = self.act2(resA.features)
         resA.features = self.bn1(resA.features)
 
+        # Process the output of above layer in 
+        # (1 x 3 x 3) sparse convolution module
         resA = self.conv3(resA)
         resA.features = self.act3(resA.features)
         resA.features = self.bn2(resA.features)
+
+        # At the end output the summation of the two bracnhes.
         resA.features = resA.features + shortcut.features
 
         return resA
 
 
 class ResBlock(nn.Module):
+
+    """
+
+    Asymmetrical Downsample Block
+
+    """
+
     def __init__(self, in_filters, out_filters, dropout_rate, kernel_size=(3, 3, 3), stride=1,
                  pooling=True, drop_out=True, height_pooling=False, indice_key=None):
         super(ResBlock, self).__init__()
+
         self.pooling = pooling
         self.drop_out = drop_out
 
@@ -130,8 +162,17 @@ class ResBlock(nn.Module):
         self.weight_initialization()
 
     def weight_initialization(self):
+
+        """
+
+        Assign constant initial weight and bias to the
+        BatchNorm1d module.
+
+        """
         for m in self.modules():
+
             if isinstance(m, nn.BatchNorm1d):
+
                 nn.init.constant_(m.weight, 1)
                 nn.init.constant_(m.bias, 0)
 
@@ -162,6 +203,14 @@ class ResBlock(nn.Module):
 
 
 class UpBlock(nn.Module):
+
+    """
+
+    Asymmetrical Upsample Block
+
+    """
+
+
     def __init__(self, in_filters, out_filters, kernel_size=(3, 3, 3), indice_key=None, up_key=None):
         super(UpBlock, self).__init__()
         # self.drop_out = drop_out
@@ -188,8 +237,18 @@ class UpBlock(nn.Module):
         self.weight_initialization()
 
     def weight_initialization(self):
+
+        """
+
+        Assign constant initial weight and bias to the
+        BatchNorm1d module.
+
+        """
+
         for m in self.modules():
+
             if isinstance(m, nn.BatchNorm1d):
+
                 nn.init.constant_(m.weight, 1)
                 nn.init.constant_(m.bias, 0)
 
@@ -271,14 +330,22 @@ class Asymm_3d_spconv(nn.Module):
                  use_norm=True,
                  num_input_features=128,
                  nclasses=20, n_height=32, strict=False, init_size=16):
-        super(Asymm_3d_spconv, self).__init__()
-        self.nclasses = nclasses
-        self.nheight = n_height
-        self.strict = False
+       
+        super(Asymm_3d_spconv, self).__init__()         
 
+        # Number of unique classes
+        self.nclasses = nclasses
+        # ?
+        self.nheight = n_height
+        # ?
+        self.strict = False
+        
+        # Grid size
         sparse_shape = np.array(output_shape)
+
         # sparse_shape[0] = 11
-        print(sparse_shape)
+        
+        # Grid size
         self.sparse_shape = sparse_shape
 
 

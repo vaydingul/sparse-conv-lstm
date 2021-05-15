@@ -98,8 +98,10 @@ def main(args):
                                                                   val_dataloader_config,
                                                                   grid_size=grid_size)
 
+    
     # Epoch count initialization
     epoch = 0
+    
     # Best validation mean intersection over union initialization
     best_val_miou = 0
     # Set the training mode for the model!
@@ -303,7 +305,9 @@ def main(args):
         #* #############################################################################
 
 
+
 if __name__ == '__main__':
+
     # Training settings
     parser = argparse.ArgumentParser(description='')
     parser.add_argument('-y', '--config_path',
