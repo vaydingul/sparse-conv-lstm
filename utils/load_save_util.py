@@ -6,6 +6,7 @@ import torch
 
 
 def load_checkpoint(model_load_path, model):
+
     my_model_dict = model.state_dict()
     pre_weight = torch.load(model_load_path, map_location=torch.device('cpu'))
 
@@ -21,9 +22,10 @@ def load_checkpoint(model_load_path, model):
         else:
             nomatch_size += 1
 
-    print("matched parameter sets: {}, and no matched: {}".format(match_size, nomatch_size))
+    print("Matched parameter sets: {}, and no matched: {}".format(match_size, nomatch_size))
 
     my_model_dict.update(part_load)
+    
     model.load_state_dict(my_model_dict)
 
     return model

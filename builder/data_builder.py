@@ -41,8 +41,8 @@ def build(dataset_config,
     val_pt_dataset = SemKITTI(data_path, imageset=val_imageset,
                               return_ref=val_ref, label_mapping=label_mapping, nusc=nusc)
 
-    # Based on the data modality, return the pre-processing 
-    # applied form of the dataloader. For example, 
+    # Based on the data modality, return the pre-processing
+    # applied form of the dataloader. For example,
     # voxel representation, and cylindrical representation
     # requires different types of pre-processing on the data
     train_dataset = get_model_class(dataset_config['dataset_type'])(

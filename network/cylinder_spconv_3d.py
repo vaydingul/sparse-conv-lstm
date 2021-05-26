@@ -50,7 +50,9 @@ class cylinder_asym(nn.Module):
         # As an output, get unique point coordinates, and the processed features of the points
         coords, features_3d = self.cylinder_3d_generator(train_pt_fea_ten, train_vox_ten)
 
-        
+        # Process the calculated features and the unique point coordinates in
+        # Asymmetrical Sparse Convolutional Network and calculate the
+        # log-probabilities per point
         spatial_features = self.cylinder_3d_spconv_seg(features_3d, coords, batch_size)
-
+        
         return spatial_features

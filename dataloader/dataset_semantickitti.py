@@ -342,7 +342,7 @@ class cylinder_dataset(data.Dataset):
         dim_array = np.ones(len(self.grid_size) + 1, int)
         dim_array[0] = -1
 
-        # Calculate the starting point of the voxels
+        # Calculate the centers of the voxels 
         voxel_position = np.indices(
             self.grid_size) * intervals.reshape(dim_array) + min_bound.reshape(dim_array)
 
