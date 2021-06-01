@@ -1,4 +1,5 @@
 
+import collections
 import os
 import time
 import argparse
@@ -7,6 +8,7 @@ import numpy as np
 import torch
 import torch.optim as optim
 from tqdm import tqdm
+from itertools import islice, tee
 
 from utils.metric_util import per_class_iu, fast_hist_crop
 from dataloader.pc_dataset import get_SemKITTI_label_name
@@ -18,6 +20,26 @@ from utils.load_save_util import load_checkpoint
 import warnings
 warnings.filterwarnings("ignore")
 
+
+
+def consume(iterator, n):
+    "Advance the iterator n-steps ahead. If n is none, consume entirely."
+    # Use functions that consume iterators at C speed.
+    if n is None:
+        # feed the entire iterator into a zero-length deque
+        collections.deque(iterator, maxlen=0)
+    else:
+        # advance to the empty slice starting at position n
+        next(islice(iterator, n, n), None)
+
+def window(iterable, n=2):
+    "s -> (s0, ...,s(n-1)), (s1, ...,sn), (s2, ..., s(n+1)), ..."
+    iters = tee(iterable, n)
+    # Could use enumerate(islice(iters, 1, None), 1) to avoid consume(it, 0), but that's
+    # slower for larger window sizes, while saving only small fixed "noop" cost
+    for i, it in enumerate(iters):
+        consume(it, i)
+    return zip(*iters)
 
 def main(args):
     # Device is CPU since it is a local mahcine
@@ -142,9 +164,12 @@ def main(args):
                 # Do not calculate gradients during inference
                 with torch.no_grad():
                     # Iterate over validation set
-                    for i_iter_val, (_, val_vox_label, val_grid, val_pt_labs, val_pt_fea) in enumerate(
-                            val_dataset_loader):
+                    #for val_iter_no, (_, val_vox_label, val_grid, val_pt_labs, val_pt_fea) in enumerate(
+                    #        val_dataset_loader):
 
+                    for data in window(val_dataset_loader, 5):
+                        
+                        """
                         # TODO: Do that in a collate function
                         # Convert the val_pt_fea to Torch Float Tensor
                         val_pt_fea_ten = [torch.from_numpy(i).type(torch.FloatTensor).to(pytorch_device) for i in
@@ -157,10 +182,28 @@ def main(args):
                         # Convert the val_vox_label to Torch Tensor
                         val_label_tensor = val_vox_label.type(
                             torch.LongTensor).to(pytorch_device)
+                        """
+                        
+                        val_pt_fea_ten = []
+                        val_grid_ten = []
+                        val_grid = []
+                        val_pt_labs = []
+                        for datum in data:
+                            
+                            val_pt_fea_ten.append(torch.from_numpy(datum[-1][0]).type(torch.FloatTensor).to(pytorch_device))
+                            val_grid_ten.append(torch.from_numpy(datum[2][0]).to(pytorch_device))
+                            val_grid.append(datum[2][0])
+                            val_pt_labs.append(datum[3][0])
+
+
+                        val_label_tensor = torch.stack([datum[1] for datum in data])
+
+
+
 
                         #! Execute the model!
                         predict_labels = my_model(
-                            val_pt_fea_ten, val_grid_ten, val_batch_size)
+                            val_pt_fea_ten, val_grid_ten, 5)
 
                         # aux_loss = loss_fun(aux_outputs, point_label_tensor)
 

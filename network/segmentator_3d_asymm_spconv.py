@@ -504,6 +504,7 @@ class Asymm_3d_spconv(nn.Module):
         # Concatenate the features coming from DDCM and AU4
         up0e.features = torch.cat((up0e.features, up1e.features), 1)
 
+
         #* Calculate the log-probabilities
         logits = self.logits(up0e)
 
@@ -511,4 +512,4 @@ class Asymm_3d_spconv(nn.Module):
         y = logits.dense()
 
         # Return the dense log-probabilities
-        return y
+        return up0e, y

@@ -33,14 +33,16 @@ class SparseConvLSTMCell(nn.Module):
         self.hidden_dim = hidden_dim
         self.spatial_shape = spatial_shape
         self.kernel_size = kernel_size
-        self.padding = kernel_size[0] // 2, kernel_size[1] // 2
+        self.padding = kernel_size[0] // 2, kernel_size[1] // 2, kernel_size[2] // 2
         self.bias = bias
 
+        
         self.sparse_conv = spconv.SubMConv3d(in_channels=self.input_dim + self.hidden_dim,
                                              out_channels=4 * self.hidden_dim,
                                              kernel_size=self.kernel_size,
                                              padding=self.padding,
-                                             bias=self.bias)
+                                             bias=self.bias,
+                                             indice_key="LSTMCell")
         '''
         self.conv = nn.Conv2d(in_channels=self.input_dim + self.hidden_dim,
                               out_channels=4 * self.hidden_dim,
@@ -49,20 +51,24 @@ class SparseConvLSTMCell(nn.Module):
                               bias=self.bias)
         '''
 
-    def forward(self, input_tensor, cur_state, coors, batch_size):
+    def forward(self, input_tensor_sparse, cur_state, coors, batch_size):
 
         # Make sure the coordinates are integer
-        coors = coors.int()
+        #coors = coors.int()
 
         h_cur, c_cur = cur_state
 
         # Transform the input arguments into an individual Sparse Tensor
-        input_tensor_sparse = spconv.SparseConvTensor(input_tensor, coors, self.spatial_shape,
-                                                      batch_size)
-
+        #input_tensor_sparse = spconv.SparseConvTensor(input_tensor, coors, self.spatial_shape,
+        #                                              batch_size)
+        combined_sparse = input_tensor_sparse
+        
         # concatenate along channel axis
-        combined_sparse = torch.cat(
+        combined_sparse.features = torch.cat(
             [input_tensor_sparse.features, h_cur.features], dim=1)
+
+        #input_tensor_sparse.indices = torch.cat(
+        #    [input_tensor_sparse.indices, h_cur.indices], dim=1)
 
         combined_sparse_conv = self.sparse_conv(combined_sparse)
 
@@ -79,11 +85,9 @@ class SparseConvLSTMCell(nn.Module):
 
         return spconv.SparseConvTensor(h_next, coors, self.spatial_shape, batch_size), spconv.SparseConvTensor(c_next, coors, self.spatial_shape, batch_size)
 
-    def init_hidden(self, batch_size, point_cloud_size):
-        num_points, num_features = point_cloud_size
-        return (torch.zeros(batch_size, self.hidden_dim, num_points, num_features, device=self.sparse_conv.weight.device),
-                torch.zeros(batch_size, self.hidden_dim, num_points, num_features, device=self.sparse_conv.weight.device))
-
+    def init_hidden(self, num_points, coords, spatial_shape, batch_size):
+        coords = coords.int()
+        return (spconv.SparseConvTensor(torch.zeros(num_points, self.hidden_dim, device=self.sparse_conv.weight.device), coords, spatial_shape, batch_size), )*2 
 
 class SparseConvLSTM(nn.Module):
 
@@ -148,7 +152,7 @@ class SparseConvLSTM(nn.Module):
 
         self.cell_list = nn.ModuleList(cell_list)
 
-    def forward(self, input_tensor, hidden_state=None):
+    def forward(self, input_tensor,  coords, batch_size, hidden_state=None):
         """
 
         Parameters
@@ -169,21 +173,22 @@ class SparseConvLSTM(nn.Module):
             input_tensor = input_tensor.permute(1, 0, 2, 3, 4)
         '''
 
-
-        b, _, num_points, num_features = input_tensor.size()
+        #b, _, num_points, num_features = input_tensor.size()
+        
+        num_points, num_features = input_tensor[0].features.size()
 
         # Implement stateful SparseConvLSTM
         if hidden_state is not None:
             raise NotImplementedError()
         else:
             # Since the init is done in forward. Can send image size here
-            hidden_state = self._init_hidden(batch_size=b,
-                                             image_size=(num_points, num_features))
+            hidden_state = self._init_hidden(num_points, input_tensor[0].indices, self.spatial_shape, 1)
 
         layer_output_list = []
         last_state_list = []
 
-        seq_len = input_tensor.size(1)
+        #seq_len = input_tensor.size(batch_size)
+        seq_len = len(input_tensor)
         cur_layer_input = input_tensor
 
         for layer_idx in range(self.num_layers):
@@ -191,12 +196,26 @@ class SparseConvLSTM(nn.Module):
             h, c = hidden_state[layer_idx]
             output_inner = []
             for t in range(seq_len):
-                h, c = self.cell_list[layer_idx](input_tensor=cur_layer_input[:, t, :, :],
-                                                 cur_state=[h, c])
+                
+                if t != seq_len-1:
+                    
+                    i = t
+                    k = t+1
+
+                else:
+
+                    i = t
+                    k = int((t+1)/2)
+                
+                h, c = self.cell_list[layer_idx](cur_layer_input[i], (h, c), coords[k], 1)
                 output_inner.append(h)
 
-            layer_output = torch.stack(output_inner, dim=1)
+
+            #layer_output = torch.stack(output_inner, dim=1)
+            layer_output = output_inner
             cur_layer_input = layer_output
+
+
 
             layer_output_list.append(layer_output)
             last_state_list.append([h, c])
@@ -207,11 +226,13 @@ class SparseConvLSTM(nn.Module):
 
         return layer_output_list, last_state_list
 
-    def _init_hidden(self, batch_size, image_size):
+    def _init_hidden(self, num_points, coords, spatial_shape, batch_size):
         init_states = []
+        coords = coords.int()
+
         for i in range(self.num_layers):
             init_states.append(
-                self.cell_list[i].init_hidden(batch_size, image_size))
+                self.cell_list[i].init_hidden(num_points, coords, spatial_shape, batch_size))
         return init_states
 
     @staticmethod

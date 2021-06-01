@@ -5,7 +5,7 @@
 from network.cylinder_spconv_3d import get_model_class
 from network.segmentator_3d_asymm_spconv import Asymm_3d_spconv
 from network.cylinder_fea_generator import cylinder_fea
-
+from network.sparseconvlstm import SparseConvLSTM
 
 def build(model_config):
 
@@ -42,11 +42,18 @@ def build(model_config):
                               out_pt_fea_dim=out_fea_dim,
                               fea_compre=num_input_features)
 
+    sparse_conv_lstm_net = SparseConvLSTM(input_dim = 64,
+                                          hidden_dim=num_class,
+                                          spatial_shape=output_shape,
+                                          kernel_size = (3, 3, 3),
+                                          num_layers = 2)
+
     # The general model architecture will be the one in the 
     # model_params/model_architecture, e.g. cylinder_asym
     model = get_model_class(model_config["model_architecture"])(
         cylin_model=cy_fea_net,
         segmentator_spconv=cylinder_3d_spconv_seg,
+        sparse_conv_lstm_net = sparse_conv_lstm_net,
         sparse_shape=output_shape
     )
 
