@@ -56,7 +56,7 @@ class SemKITTI_sk(data.Dataset):
         for i_folder in split:
             self.im_idx += absoluteFilePaths(
                 '/'.join([data_path, str(i_folder).zfill(2), 'velodyne']))
-
+        self.im_idx.sort()
     def __len__(self):
         
         # Denotes the total number of samples

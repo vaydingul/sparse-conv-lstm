@@ -147,7 +147,10 @@ def main(args):
 
         # ? lr_scheduler.step(epoch)
 
-        for i_iter, (_, train_vox_label, train_grid, _, train_pt_fea) in enumerate(train_dataset_loader):
+        #for i_iter, (_, train_vox_label, train_grid, _, train_pt_fea) in enumerate(train_dataset_loader):
+        for i_iter, train_data in enumerate(window(train_dataset_loader, 5)):
+
+        
 
             if global_iter % check_iter == 0:  # and epoch >= 1:
 
@@ -167,8 +170,8 @@ def main(args):
                     #for val_iter_no, (_, val_vox_label, val_grid, val_pt_labs, val_pt_fea) in enumerate(
                     #        val_dataset_loader):
 
-                    for data in window(val_dataset_loader, 5):
-                        
+                    for val_data in window(val_dataset_loader, 5):
+                        print("==============")
                         """
                         # TODO: Do that in a collate function
                         # Convert the val_pt_fea to Torch Float Tensor
@@ -188,16 +191,18 @@ def main(args):
                         val_grid_ten = []
                         val_grid = []
                         val_pt_labs = []
-                        for datum in data:
+                        for datum in val_data:
                             
                             val_pt_fea_ten.append(torch.from_numpy(datum[-1][0]).type(torch.FloatTensor).to(pytorch_device))
                             val_grid_ten.append(torch.from_numpy(datum[2][0]).to(pytorch_device))
+                            
                             val_grid.append(datum[2][0])
                             val_pt_labs.append(datum[3][0])
 
 
-                        val_label_tensor = torch.stack([datum[1] for datum in data])
-
+                        #val_label_tensor = torch.stack([datum[1] for datum in data])
+                        val_label_tensor = val_data[2][1].type(
+                            torch.LongTensor).to(pytorch_device)
 
 
 
@@ -219,6 +224,8 @@ def main(args):
                         # Transmit them to CPU
                         predict_labels = predict_labels.cpu().detach().numpy()
 
+                        val_grid = [val_grid[2]]
+                        val_pt_labs = [val_pt_labs[2]]
                         # For every point coordinate in point cloud
                         for count, i_val_grid in enumerate(val_grid):
 
@@ -249,7 +256,7 @@ def main(args):
 
                 # Calculate the mean intersection over union
                 val_miou = np.nanmean(iou) * 100
-                del val_vox_label, val_grid, val_pt_fea, val_grid_ten
+                del val_grid, val_grid_ten
 
                 # If there is an improvement on the 
                 # mean intersection over union, 
@@ -273,7 +280,8 @@ def main(args):
                 #* #############################################################################
 
             #* ##################################### TRAINING ROUTINE ##########################
-
+            
+            """
             # Convert the train_pt_fea to Torch Float Tensor
             train_pt_fea_ten = [torch.from_numpy(i).type(
                 torch.FloatTensor).to(pytorch_device) for i in train_pt_fea]
@@ -286,6 +294,26 @@ def main(args):
 
             # Convert the train_vox_label to Torch  Tensor
             point_label_tensor = train_vox_label.type(
+                torch.LongTensor).to(pytorch_device)
+            """
+
+            train_pt_fea_ten = []
+            train_grid_ten = []
+            train_vox_ten = []
+            train_grid = []
+
+            for datum in train_data:
+                
+                train_pt_fea_ten.append(torch.from_numpy(datum[-1][0]).type(torch.FloatTensor).to(pytorch_device))
+                train_vox_ten.append(torch.from_numpy(datum[2][0]).to(pytorch_device))
+                train_grid_ten.append(torch.from_numpy(datum[2][0][:, :2]).to(pytorch_device))
+                
+
+                train_grid.append(datum[2][0])
+
+
+            #val_label_tensor = torch.stack([datum[1] for datum in data])
+            point_label_tensor = train_data[2][1].type(
                 torch.LongTensor).to(pytorch_device)
 
             #! Forward + Backward + Optimize
