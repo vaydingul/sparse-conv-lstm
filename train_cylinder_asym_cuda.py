@@ -43,7 +43,7 @@ def window(iterable, n=2):
 
 def main(args):
     # Device is CPU since it is a cluster
-    pytorch_device = torch.device('cuda:0')
+    pytorch_device = torch.device('cuda')
 
     # It is the input given to the main script:
     # the directory of the config.yaml
@@ -136,6 +136,8 @@ def main(args):
     check_iter = train_hypers['eval_every_n_steps']
     # The maximum number of epoch that model  will be trained
     MAXIMUM_NUMBER_OF_EPOCHS = train_hypers['max_num_epochs']
+    
+    SEQUENCE_LENGTH = 3
     # ====
 
     while epoch < MAXIMUM_NUMBER_OF_EPOCHS:
@@ -148,7 +150,7 @@ def main(args):
         # ? lr_scheduler.step(epoch)
 
         #for i_iter, (_, train_vox_label, train_grid, _, train_pt_fea) in enumerate(train_dataset_loader):
-        for i_iter, train_data in enumerate(window(train_dataset_loader, 5)):
+        for i_iter, train_data in enumerate(window(train_dataset_loader, SEQUENCE_LENGTH)):
 
         
 
@@ -201,7 +203,7 @@ def main(args):
 
 
                         #val_label_tensor = torch.stack([datum[1] for datum in data])
-                        val_label_tensor = val_data[2][1].type(
+                        val_label_tensor = val_data[int((SEQUENCE_LENGTH+1)*0.5)][1].type(
                             torch.LongTensor).to(pytorch_device)
 
 
@@ -224,8 +226,8 @@ def main(args):
                         # Transmit them to CPU
                         predict_labels = predict_labels.cpu().detach().numpy()
 
-                        val_grid = [val_grid[2]]
-                        val_pt_labs = [val_pt_labs[2]]
+                        val_grid = [val_grid[int((SEQUENCE_LENGTH+1)*0.5)]]
+                        val_pt_labs = [val_pt_labs[int((SEQUENCE_LENGTH+1)*0.5)]]
                         # For every point coordinate in point cloud
                         for count, i_val_grid in enumerate(val_grid):
 
@@ -313,7 +315,7 @@ def main(args):
 
 
             #val_label_tensor = torch.stack([datum[1] for datum in data])
-            point_label_tensor = train_data[2][1].type(
+            point_label_tensor = train_data[int((SEQUENCE_LENGTH+1)*0.5)][1].type(
                 torch.LongTensor).to(pytorch_device)
 
             #! Forward + Backward + Optimize
