@@ -210,7 +210,7 @@ def main(args):
 
                         #! Execute the model!
                         predict_labels = my_model(
-                            val_pt_fea_ten, val_grid_ten, 5)
+                            val_pt_fea_ten, val_grid_ten, SEQUENCE_LENGTH)
 
                         # aux_loss = loss_fun(aux_outputs, point_label_tensor)
 
@@ -322,7 +322,7 @@ def main(args):
 
             #! Execute the model
             outputs = my_model(
-                train_pt_fea_ten, train_vox_ten, train_batch_size)
+                train_pt_fea_ten, train_vox_ten, SEQUENCE_LENGTH)
             #! Calculate the loss
             loss = lovasz_softmax(torch.nn.functional.softmax(outputs), point_label_tensor, ignore=0) + loss_func(
                 outputs, point_label_tensor)
