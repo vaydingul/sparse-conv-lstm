@@ -91,8 +91,8 @@ class cylinder_asym(nn.Module):
 
         out_sparse=out[1][0][0]
 
-        out_sparse.features=out_sparse.features[:sparse_features_[int((len(coords_)+1)*0.5)].shape[0]]
-        out_sparse.indices=out_sparse.indices[:coords_[int((len(coords_)+1)*0.5)].shape[0]]
+        out_sparse.features=out_sparse.features[:sparse_features_[int((len(coords_)+1)*0.5) - 1].shape[0]]
+        out_sparse.indices=out_sparse.indices[:coords_[int((len(coords_)+1)*0.5) - 1].shape[0]]
 
         # logits = self.logits(out_sparse)
 

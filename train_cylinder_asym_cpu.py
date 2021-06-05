@@ -42,7 +42,7 @@ def window(iterable, n=2):
     return zip(*iters)
 
 def main(args):
-    # Device is CPU since it is a cluster
+    # Device is CPU since it is a local machine
     pytorch_device = torch.device('cpu')
 
     # It is the input given to the main script:
@@ -154,7 +154,7 @@ def main(args):
 
         
 
-            if global_iter % check_iter == 0 and epoch >= 1:
+            if global_iter % check_iter == 0: # and epoch >= 1:
 
                 #* ############  VALIDATION SET validation ##########################
                 # Set the evaluation/inference mode for the model!
@@ -203,7 +203,7 @@ def main(args):
 
 
                         #val_label_tensor = torch.stack([datum[1] for datum in data])
-                        val_label_tensor = val_data[int((SEQUENCE_LENGTH+1)*0.5)][1].type(
+                        val_label_tensor = val_data[int((SEQUENCE_LENGTH+1)*0.5) - 1][1].type(
                             torch.LongTensor).to(pytorch_device)
 
 
@@ -226,8 +226,8 @@ def main(args):
                         # Transmit them to CPU
                         predict_labels = predict_labels.cpu().detach().numpy()
 
-                        val_grid = [val_grid[int((SEQUENCE_LENGTH+1)*0.5)]]
-                        val_pt_labs = [val_pt_labs[int((SEQUENCE_LENGTH+1)*0.5)]]
+                        val_grid = [val_grid[int((SEQUENCE_LENGTH+1)*0.5) - 1]]
+                        val_pt_labs = [val_pt_labs[int((SEQUENCE_LENGTH+1)*0.5) - 1]]
                         # For every point coordinate in point cloud
                         for count, i_val_grid in enumerate(val_grid):
 
@@ -315,7 +315,7 @@ def main(args):
 
 
             #val_label_tensor = torch.stack([datum[1] for datum in data])
-            point_label_tensor = train_data[int((SEQUENCE_LENGTH+1)*0.5)][1].type(
+            point_label_tensor = train_data[int((SEQUENCE_LENGTH+1)*0.5) - 1][1].type(
                 torch.LongTensor).to(pytorch_device)
 
             #! Forward + Backward + Optimize
