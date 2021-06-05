@@ -42,8 +42,8 @@ def window(iterable, n=2):
     return zip(*iters)
 
 def main(args):
-    # Device is CPU since it is a cluster
-    pytorch_device = torch.device('cuda')
+    # Device is CUDA, since it is cluster
+    pytorch_device = torch.device('cuda:0')
 
     # It is the input given to the main script:
     # the directory of the config.yaml
