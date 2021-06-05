@@ -172,7 +172,7 @@ def main(args):
                     #for val_iter_no, (_, val_vox_label, val_grid, val_pt_labs, val_pt_fea) in enumerate(
                     #        val_dataset_loader):
 
-                    for val_data in window(val_dataset_loader, 5):
+                    for val_data in window(val_dataset_loader, SEQUENCE_LENGTH):
                         print("==============")
                         """
                         # TODO: Do that in a collate function
@@ -384,7 +384,7 @@ if __name__ == '__main__':
     # Training settings
     parser = argparse.ArgumentParser(description='')
     parser.add_argument('-y', '--config_path',
-                        default='config/semantickitti.yaml')
+                        default='config/semantickitti_cuda.yaml')
     args = parser.parse_args()
 
     print(' '.join(sys.argv))

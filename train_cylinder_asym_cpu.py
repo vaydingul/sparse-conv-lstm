@@ -42,7 +42,7 @@ def window(iterable, n=2):
     return zip(*iters)
 
 def main(args):
-    # Device is CPU since it is a local mahcine
+    # Device is CPU since it is a cluster
     pytorch_device = torch.device('cpu')
 
     # It is the input given to the main script:
@@ -136,6 +136,8 @@ def main(args):
     check_iter = train_hypers['eval_every_n_steps']
     # The maximum number of epoch that model  will be trained
     MAXIMUM_NUMBER_OF_EPOCHS = train_hypers['max_num_epochs']
+    
+    SEQUENCE_LENGTH = 3
     # ====
 
     while epoch < MAXIMUM_NUMBER_OF_EPOCHS:
@@ -148,11 +150,11 @@ def main(args):
         # ? lr_scheduler.step(epoch)
 
         #for i_iter, (_, train_vox_label, train_grid, _, train_pt_fea) in enumerate(train_dataset_loader):
-        for i_iter, train_data in enumerate(window(train_dataset_loader, 5)):
+        for i_iter, train_data in enumerate(window(train_dataset_loader, SEQUENCE_LENGTH)):
 
         
 
-            if global_iter % check_iter == 0:  # and epoch >= 1:
+            if global_iter % check_iter == 0 and epoch >= 1:
 
                 #* ############  VALIDATION SET validation ##########################
                 # Set the evaluation/inference mode for the model!
@@ -170,7 +172,7 @@ def main(args):
                     #for val_iter_no, (_, val_vox_label, val_grid, val_pt_labs, val_pt_fea) in enumerate(
                     #        val_dataset_loader):
 
-                    for val_data in window(val_dataset_loader, 5):
+                    for val_data in window(val_dataset_loader, SEQUENCE_LENGTH):
                         print("==============")
                         """
                         # TODO: Do that in a collate function
@@ -201,14 +203,14 @@ def main(args):
 
 
                         #val_label_tensor = torch.stack([datum[1] for datum in data])
-                        val_label_tensor = val_data[2][1].type(
+                        val_label_tensor = val_data[int((SEQUENCE_LENGTH+1)*0.5)][1].type(
                             torch.LongTensor).to(pytorch_device)
 
 
 
                         #! Execute the model!
                         predict_labels = my_model(
-                            val_pt_fea_ten, val_grid_ten, 5)
+                            val_pt_fea_ten, val_grid_ten, SEQUENCE_LENGTH)
 
                         # aux_loss = loss_fun(aux_outputs, point_label_tensor)
 
@@ -224,8 +226,8 @@ def main(args):
                         # Transmit them to CPU
                         predict_labels = predict_labels.cpu().detach().numpy()
 
-                        val_grid = [val_grid[2]]
-                        val_pt_labs = [val_pt_labs[2]]
+                        val_grid = [val_grid[int((SEQUENCE_LENGTH+1)*0.5)]]
+                        val_pt_labs = [val_pt_labs[int((SEQUENCE_LENGTH+1)*0.5)]]
                         # For every point coordinate in point cloud
                         for count, i_val_grid in enumerate(val_grid):
 
@@ -313,14 +315,14 @@ def main(args):
 
 
             #val_label_tensor = torch.stack([datum[1] for datum in data])
-            point_label_tensor = train_data[2][1].type(
+            point_label_tensor = train_data[int((SEQUENCE_LENGTH+1)*0.5)][1].type(
                 torch.LongTensor).to(pytorch_device)
 
             #! Forward + Backward + Optimize
 
             #! Execute the model
             outputs = my_model(
-                train_pt_fea_ten, train_vox_ten, train_batch_size)
+                train_pt_fea_ten, train_vox_ten, SEQUENCE_LENGTH)
             #! Calculate the loss
             loss = lovasz_softmax(torch.nn.functional.softmax(outputs), point_label_tensor, ignore=0) + loss_func(
                 outputs, point_label_tensor)
@@ -382,7 +384,7 @@ if __name__ == '__main__':
     # Training settings
     parser = argparse.ArgumentParser(description='')
     parser.add_argument('-y', '--config_path',
-                        default='config/semantickitti.yaml')
+                        default='config/semantickitti_cpu.yaml')
     args = parser.parse_args()
 
     print(' '.join(sys.argv))
