@@ -137,7 +137,7 @@ def main(args):
     # The maximum number of epoch that model  will be trained
     MAXIMUM_NUMBER_OF_EPOCHS = train_hypers['max_num_epochs']
     
-    SEQUENCE_LENGTH = 3
+    SEQUENCE_LENGTH = 1
     # ====
 
     while epoch < MAXIMUM_NUMBER_OF_EPOCHS:
