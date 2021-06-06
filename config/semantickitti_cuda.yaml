@@ -8,9 +8,9 @@ model_params:
 
   # Grid size of each voxel
   output_shape:
-    - 120
-    - 90
-    - 8
+    - 480
+    - 360
+    - 32
 
   fea_dim: 9
   out_fea_dim: 256
