@@ -132,4 +132,5 @@ dmypy.json
 *.label
 *.bin
 *.pt
+*.txt
 ./logs_dir/*.txt
