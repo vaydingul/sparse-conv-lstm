@@ -18,7 +18,6 @@ from config.config import load_config_data
 from utils.load_save_util import load_checkpoint
 
 import warnings
-warnings.filterwarnings("ignore")
 
 
 
