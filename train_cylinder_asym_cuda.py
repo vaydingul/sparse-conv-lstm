@@ -1,5 +1,3 @@
-
-import collections
 import os
 import time
 import argparse
@@ -8,7 +6,6 @@ import numpy as np
 import torch
 import torch.optim as optim
 from tqdm import tqdm
-from itertools import islice, tee
 
 from utils.metric_util import per_class_iu, fast_hist_crop
 from dataloader.pc_dataset import get_SemKITTI_label_name
@@ -20,26 +17,6 @@ from utils.load_save_util import load_checkpoint
 import warnings
 warnings.filterwarnings("ignore")
 
-
-
-def consume(iterator, n):
-    "Advance the iterator n-steps ahead. If n is none, consume entirely."
-    # Use functions that consume iterators at C speed.
-    if n is None:
-        # feed the entire iterator into a zero-length deque
-        collections.deque(iterator, maxlen=0)
-    else:
-        # advance to the empty slice starting at position n
-        next(islice(iterator, n, n), None)
-
-def window(iterable, n=2):
-    "s -> (s0, ...,s(n-1)), (s1, ...,sn), (s2, ..., s(n+1)), ..."
-    iters = tee(iterable, n)
-    # Could use enumerate(islice(iters, 1, None), 1) to avoid consume(it, 0), but that's
-    # slower for larger window sizes, while saving only small fixed "noop" cost
-    for i, it in enumerate(iters):
-        consume(it, i)
-    return zip(*iters)
 
 def main(args):
     # Device is CUDA, since it is cluster

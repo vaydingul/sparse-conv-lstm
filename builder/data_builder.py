@@ -5,7 +5,35 @@
 import torch
 from dataloader.dataset_semantickitti import get_model_class, collate_fn_BEV
 from dataloader.pc_dataset import get_pc_model_class
+from itertools import islice, tee
+import collections
+from torch.utils.data.sampler import SequentialSampler, Sampler
 
+
+def consume(iterator, n):
+    "Advance the iterator n-steps ahead. If n is none, consume entirely."
+    # Use functions that consume iterators at C speed.
+    if n is None:
+        # feed the entire iterator into a zero-length deque
+        collections.deque(iterator, maxlen=0)
+    else:
+        # advance to the empty slice starting at position n
+        next(islice(iterator, n, n), None)
+
+def window(iterable, n=2):
+    "s -> (s0, ...,s(n-1)), (s1, ...,sn), (s2, ..., s(n+1)), ..."
+    iters = tee(iterable, n)
+    # Could use enumerate(islice(iters, 1, None), 1) to avoid consume(it, 0), but that's
+    # slower for larger window sizes, while saving only small fixed "noop" cost
+    for i, it in enumerate(iters):
+        consume(it, i)
+    return zip(*iters)
+class CustomSequentialSampler(Sampler):
+
+    def __init__(self, window_length = 5):
+
+        self.window_length = window_length
+        
 
 def build(dataset_config,
           train_dataloader_config,
@@ -67,15 +95,21 @@ def build(dataset_config,
         ignore_label=dataset_config["ignore_label"],
     )
 
+    seqSampler = SequentialSampler()
+
+
+
     train_dataset_loader = torch.utils.data.DataLoader(dataset=train_dataset,
                                                        batch_size=train_dataloader_config["batch_size"],
                                                        collate_fn=collate_fn_BEV,
                                                        shuffle=train_dataloader_config["shuffle"],
-                                                       num_workers=train_dataloader_config["num_workers"])
+                                                       num_workers=train_dataloader_config["num_workers"],
+                                                       pin_memory = True)
     val_dataset_loader = torch.utils.data.DataLoader(dataset=val_dataset,
                                                      batch_size=val_dataloader_config["batch_size"],
                                                      collate_fn=collate_fn_BEV,
                                                      shuffle=val_dataloader_config["shuffle"],
-                                                     num_workers=val_dataloader_config["num_workers"])
+                                                     num_workers=val_dataloader_config["num_workers"],
+                                                     pin_memory = True)
 
     return train_dataset_loader, val_dataset_loader
