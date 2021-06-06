@@ -209,6 +209,7 @@ class SparseConvLSTM(nn.Module):
                     i = t
                     k = int((t+1)/2)
 
+                coords[k] = coords[k].int()
                 h, c = self.cell_list[layer_idx](
                     cur_layer_input[i], (h, c), coords[k], 1)
                 output_inner.append(h)
