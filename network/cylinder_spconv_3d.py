@@ -58,7 +58,7 @@ class cylinder_asym(nn.Module):
 
         # Process the point features, and max-pool them according to the unique point coordinates
         # As an output, get unique point coordinates, and the processed features of the points
-        coords, features_3d=self.cylinder_3d_generator(
+        coords, features_3d = self.cylinder_3d_generator(
             train_pt_fea_ten, train_vox_ten)
 
         # Process the calculated features and the unique point coordinates in
@@ -66,38 +66,40 @@ class cylinder_asym(nn.Module):
         # log-probabilities per point
         # spatial_features = self.cylinder_3d_spconv_seg(features_3d, coords, batch_size)
 
-        sparse_features, predictions=self.cylinder_3d_spconv_seg(
+        sparse_features, predictions = self.cylinder_3d_spconv_seg(
             features_3d, coords, batch_size)
 
-        sparse_features_= [sparse_features.features[coords[:, 0] == i] for i in range(batch_size)]
-        coords_=  [coords[[coords[:, 0] == i]] for i in range(batch_size)]
-        
-        for k in range(batch_size):
-            coords_[k][:,0] = 0
-
-        sparse_features_padded=pad_sequence(sparse_features_, True)
-        coords_padded=pad_sequence(coords_, True, 1000)
-
-        sparse_features_conv_tensor_list=[]
-
+        sparse_features_ = [sparse_features.features[coords[:, 0] == i]
+                            for i in range(batch_size)]
+        coords_ = [coords[[coords[:, 0] == i]].int() for i in range(batch_size)]
 
         for k in range(batch_size):
+            coords_[k][:, 0] = 0
 
+        sparse_features_padded = pad_sequence(sparse_features_, True)
+        coords_padded = pad_sequence(coords_, True, 1000)
+
+        sparse_features_conv_tensor_list = []
+
+        for k in range(batch_size):
 
             sparse_features_conv_tensor_list.append(spconv.SparseConvTensor(
                 sparse_features_padded[k], coords_padded[k].int(), self.sparse_shape, 1))
 
-        #out=self.sparse_conv_lstm_net(sparse_features_conv_tensor_list, coords_padded.int(), 1)
-#
-        #out_sparse=out[1][0][0]
-#
-        #out_sparse.features=out_sparse.features[:sparse_features_[int((len(coords_)+1)*0.5) - 1].shape[0]]
-        #out_sparse.indices=out_sparse.indices[:coords_[int((len(coords_)+1)*0.5) - 1].shape[0]]
-#
-        ## logits = self.logits(out_sparse)
-#
-        ## predictions = logits.dense()
-#
-        #predictions=out_sparse.dense()
+        out = self.sparse_conv_lstm_net(
+            sparse_features_conv_tensor_list, coords_padded.int(), 1)
+
+        out_sparse = out[1][0][0]
+
+        out_sparse.features = out_sparse.features[:sparse_features_[
+            int((len(coords_)+1)*0.5) - 1].shape[0]]
+        out_sparse.indices = out_sparse.indices[:coords_[
+            int((len(coords_)+1)*0.5) - 1].shape[0]]
+
+        # logits = self.logits(out_sparse)
+
+        # predictions = logits.dense()
+
+        predictions = out_sparse.dense()
 
         return predictions

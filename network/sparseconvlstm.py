@@ -54,7 +54,7 @@ class SparseConvLSTMCell(nn.Module):
     def forward(self, input_tensor_sparse, cur_state, coors, batch_size):
 
         # Make sure the coordinates are integer
-        #coors = coors.int()
+        coors = coors.int()
 
         h_cur, c_cur = cur_state
 
@@ -174,7 +174,7 @@ class SparseConvLSTM(nn.Module):
         '''
 
         #b, _, num_points, num_features = input_tensor.size()
-        
+        coords = coords.int()
         num_points, num_features = input_tensor[0].features.size()
 
         # Implement stateful SparseConvLSTM
