@@ -153,7 +153,7 @@ def main(args):
 
         
 
-            if global_iter % check_iter == 0 and epoch >= 1:
+            if global_iter % check_iter == 0: # and epoch >= 1:
 
                 #* ############  VALIDATION SET validation ##########################
                 # Set the evaluation/inference mode for the model!
@@ -257,7 +257,7 @@ def main(args):
 
                 # Calculate the mean intersection over union
                 val_miou = np.nanmean(iou) * 100
-                del val_grid, val_grid_ten
+                del val_grid, val_grid_ten, predict_labels, val_pt_fea_ten, val_pt_labs, val_label_tensor
 
                 # If there is an improvement on the 
                 # mean intersection over union, 
