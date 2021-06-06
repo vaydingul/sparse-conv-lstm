@@ -36,13 +36,13 @@ class SparseConvLSTMCell(nn.Module):
         self.padding = kernel_size[0] // 2, kernel_size[1] // 2, kernel_size[2] // 2
         self.bias = bias
 
-        
         self.sparse_conv = spconv.SubMConv3d(in_channels=self.input_dim + self.hidden_dim,
                                              out_channels=4 * self.hidden_dim,
                                              kernel_size=self.kernel_size,
                                              padding=self.padding,
                                              bias=self.bias,
-                                             indice_key="LSTMCell")
+                                             indice_key="LSTMCell",
+                                             use_hash=False)
         '''
         self.conv = nn.Conv2d(in_channels=self.input_dim + self.hidden_dim,
                               out_channels=4 * self.hidden_dim,
@@ -59,15 +59,15 @@ class SparseConvLSTMCell(nn.Module):
         h_cur, c_cur = cur_state
 
         # Transform the input arguments into an individual Sparse Tensor
-        #input_tensor_sparse = spconv.SparseConvTensor(input_tensor, coors, self.spatial_shape,
+        # input_tensor_sparse = spconv.SparseConvTensor(input_tensor, coors, self.spatial_shape,
         #                                              batch_size)
         combined_sparse = input_tensor_sparse
-        
+
         # concatenate along channel axis
         combined_sparse.features = torch.cat(
             [input_tensor_sparse.features, h_cur.features], dim=1)
 
-        #input_tensor_sparse.indices = torch.cat(
+        # input_tensor_sparse.indices = torch.cat(
         #    [input_tensor_sparse.indices, h_cur.indices], dim=1)
 
         combined_sparse_conv = self.sparse_conv(combined_sparse)
@@ -87,7 +87,8 @@ class SparseConvLSTMCell(nn.Module):
 
     def init_hidden(self, num_points, coords, spatial_shape, batch_size):
         coords = coords.int()
-        return (spconv.SparseConvTensor(torch.zeros(num_points, self.hidden_dim, device=self.sparse_conv.weight.device), coords, spatial_shape, batch_size), )*2 
+        return (spconv.SparseConvTensor(torch.zeros(num_points, self.hidden_dim, device=self.sparse_conv.weight.device), coords, spatial_shape, batch_size), )*2
+
 
 class SparseConvLSTM(nn.Module):
 
@@ -182,7 +183,8 @@ class SparseConvLSTM(nn.Module):
             raise NotImplementedError()
         else:
             # Since the init is done in forward. Can send image size here
-            hidden_state = self._init_hidden(num_points, input_tensor[0].indices, self.spatial_shape, 1)
+            hidden_state = self._init_hidden(
+                num_points, input_tensor[0].indices, self.spatial_shape, 1)
 
         layer_output_list = []
         last_state_list = []
@@ -196,9 +198,9 @@ class SparseConvLSTM(nn.Module):
             h, c = hidden_state[layer_idx]
             output_inner = []
             for t in range(seq_len):
-                
+
                 if t != seq_len-1:
-                    
+
                     i = t
                     k = t+1
 
@@ -206,16 +208,14 @@ class SparseConvLSTM(nn.Module):
 
                     i = t
                     k = int((t+1)/2)
-                
-                h, c = self.cell_list[layer_idx](cur_layer_input[i], (h, c), coords[k], 1)
-                output_inner.append(h)
 
+                h, c = self.cell_list[layer_idx](
+                    cur_layer_input[i], (h, c), coords[k], 1)
+                output_inner.append(h)
 
             #layer_output = torch.stack(output_inner, dim=1)
             layer_output = output_inner
             cur_layer_input = layer_output
-
-
 
             layer_output_list.append(layer_output)
             last_state_list.append([h, c])
