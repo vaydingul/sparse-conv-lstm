@@ -69,9 +69,12 @@ class cylinder_asym(nn.Module):
         sparse_features, predictions = self.cylinder_3d_spconv_seg(
             features_3d, coords, batch_size)
 
+        coords = coords.int()
+
         sparse_features_ = [sparse_features.features[coords[:, 0] == i]
                             for i in range(batch_size)]
-        coords_ = [coords[[coords[:, 0] == i]].int() for i in range(batch_size)]
+
+        coords_ = [coords[[coords[:, 0] == i]] for i in range(batch_size)]
 
         for k in range(batch_size):
             coords_[k][:, 0] = 0
@@ -79,15 +82,17 @@ class cylinder_asym(nn.Module):
         sparse_features_padded = pad_sequence(sparse_features_, True)
         coords_padded = pad_sequence(coords_, True, 1000)
 
+        coords_padded = coords_padded.int()
+
         sparse_features_conv_tensor_list = []
 
         for k in range(batch_size):
 
             sparse_features_conv_tensor_list.append(spconv.SparseConvTensor(
-                sparse_features_padded[k], coords_padded[k].int(), self.sparse_shape, 1))
+                sparse_features_padded[k], coords_padded[k], self.sparse_shape, 1))
 
         out = self.sparse_conv_lstm_net(
-            sparse_features_conv_tensor_list, coords_padded.int(), 1)
+            sparse_features_conv_tensor_list, coords_padded, 1)
 
         out_sparse = out[1][0][0]
 
