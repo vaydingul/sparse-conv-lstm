@@ -87,17 +87,17 @@ class cylinder_asym(nn.Module):
             sparse_features_conv_tensor_list.append(spconv.SparseConvTensor(
                 sparse_features_padded[k], coords_padded[k].int(), self.sparse_shape, 1))
 
-        out=self.sparse_conv_lstm_net(sparse_features_conv_tensor_list, coords_padded.int(), 1)
-
-        out_sparse=out[1][0][0]
-
-        out_sparse.features=out_sparse.features[:sparse_features_[int((len(coords_)+1)*0.5) - 1].shape[0]]
-        out_sparse.indices=out_sparse.indices[:coords_[int((len(coords_)+1)*0.5) - 1].shape[0]]
-
-        # logits = self.logits(out_sparse)
-
-        # predictions = logits.dense()
-
-        predictions=out_sparse.dense()
+        #out=self.sparse_conv_lstm_net(sparse_features_conv_tensor_list, coords_padded.int(), 1)
+#
+        #out_sparse=out[1][0][0]
+#
+        #out_sparse.features=out_sparse.features[:sparse_features_[int((len(coords_)+1)*0.5) - 1].shape[0]]
+        #out_sparse.indices=out_sparse.indices[:coords_[int((len(coords_)+1)*0.5) - 1].shape[0]]
+#
+        ## logits = self.logits(out_sparse)
+#
+        ## predictions = logits.dense()
+#
+        #predictions=out_sparse.dense()
 
         return predictions
