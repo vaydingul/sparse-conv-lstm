@@ -257,7 +257,7 @@ def main(args):
 
                 # Calculate the mean intersection over union
                 val_miou = np.nanmean(iou) * 100
-                del val_grid, val_grid_ten, predict_labels, val_pt_fea_ten, val_pt_labs, val_label_tensor
+                #del val_grid, val_grid_ten, predict_labels, val_pt_fea_ten, val_pt_labs, val_label_tensor
 
                 # If there is an improvement on the 
                 # mean intersection over union, 
