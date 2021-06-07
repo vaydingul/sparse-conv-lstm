@@ -43,7 +43,7 @@ def build(model_config):
                               fea_compre=num_input_features)
 
     sparse_conv_lstm_net = SparseConvLSTM(input_dim = 64,
-                                          hidden_dim=num_class,
+                                          hidden_dim=80,
                                           spatial_shape=output_shape,
                                           kernel_size = (3, 3, 3),
                                           num_layers = 1)
