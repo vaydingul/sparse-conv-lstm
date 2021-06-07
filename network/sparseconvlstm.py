@@ -41,7 +41,6 @@ class SparseConvLSTMCell(nn.Module):
                                              kernel_size=self.kernel_size,
                                              padding=self.padding,
                                              bias=self.bias,
-                                             indice_key="LSTMCell",
                                              use_hash=False)
         print(self.sparse_conv.__dict__)
         '''
