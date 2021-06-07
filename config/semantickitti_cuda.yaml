@@ -19,7 +19,7 @@ model_params:
   num_class: 20
   num_input_features: 16
   use_norm: True
-  init_size: 32
+  init_size: 16
 
 ###################
 ## Dataset options
