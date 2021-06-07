@@ -135,7 +135,7 @@ class SparseConvLSTM(nn.Module):
     """
 
     def __init__(self, input_dim, hidden_dim, spatial_shape, kernel_size, num_layers,
-                 batch_first=False, bias=True, return_all_layers=False):
+                 batch_first=False, bias=False, return_all_layers=False):
         super(SparseConvLSTM, self).__init__()
 
         self._check_kernel_size_consistency(kernel_size)
