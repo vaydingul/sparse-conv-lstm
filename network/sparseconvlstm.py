@@ -4,8 +4,12 @@ import spconv
 
 
 class SparseConvLSTMCell(nn.Module):
+            
+            
+    counter = 0
 
     def __init__(self, input_dim, hidden_dim, spatial_shape, kernel_size, bias):
+
         """
         Initialize SparseConvLSTM cell.
 
@@ -41,7 +45,9 @@ class SparseConvLSTMCell(nn.Module):
                                              kernel_size=self.kernel_size,
                                              padding=self.padding,
                                              bias=self.bias,
+                                             indice_key="LSTMCell{}".format(SparseConvLSTMCell.counter),
                                              use_hash=False)
+        SparseConvLSTMCell.counter += 1
         print(self.sparse_conv.__dict__)
         '''
         self.conv = nn.Conv2d(in_channels=self.input_dim + self.hidden_dim,
