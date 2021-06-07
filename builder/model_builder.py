@@ -28,6 +28,14 @@ def build(model_config):
     # Output feature dimension
     out_fea_dim = model_config['out_fea_dim']
 
+    
+
+    # Cylindrical Feature Network
+    cy_fea_net = cylinder_fea(grid_size=output_shape,
+                              fea_dim=fea_dim,
+                              out_pt_fea_dim=out_fea_dim,
+                              fea_compre=num_input_features)
+
     # Asymmetrical 3D Sparse Convolution Network
     cylinder_3d_spconv_seg = Asymm_3d_spconv(
         output_shape=output_shape,
@@ -35,12 +43,6 @@ def build(model_config):
         num_input_features=num_input_features,
         init_size=init_size,
         nclasses=num_class)
-
-    # Cylindrical Feature Network
-    cy_fea_net = cylinder_fea(grid_size=output_shape,
-                              fea_dim=fea_dim,
-                              out_pt_fea_dim=out_fea_dim,
-                              fea_compre=num_input_features)
 
     sparse_conv_lstm_net = SparseConvLSTM(input_dim = 64,
                                           hidden_dim=num_class,

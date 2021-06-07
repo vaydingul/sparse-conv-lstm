@@ -45,7 +45,8 @@ class SparseConvLSTMCell(nn.Module):
                                              kernel_size=self.kernel_size,
                                              padding=self.padding,
                                              bias=self.bias,
-                                             indice_key="LSTMCell{}".format(SparseConvLSTMCell.counter),
+                                             indice_key="reconbef",
+                                             #indice_key="LSTMCell{}".format(SparseConvLSTMCell.counter),
                                              use_hash=False)
         SparseConvLSTMCell.counter += 1
         print(self.sparse_conv.__dict__)
