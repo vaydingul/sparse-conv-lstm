@@ -55,8 +55,14 @@ class SparseConvLSTMCell(nn.Module):
 
         # Make sure the coordinates are integer
         coors = coors.int()
+        print(coors.shape)
+
+        print(input_tensor_sparse.features.shape)
+        print(input_tensor_sparse.indices.shape)
 
         h_cur, c_cur = cur_state
+        print(h_cur.features.shape)
+        print(c_cur.features.shape)
 
         # Transform the input arguments into an individual Sparse Tensor
         # input_tensor_sparse = spconv.SparseConvTensor(input_tensor, coors, self.spatial_shape,
@@ -67,6 +73,8 @@ class SparseConvLSTMCell(nn.Module):
         combined_sparse.features = torch.cat(
             [input_tensor_sparse.features, h_cur.features], dim=1)
 
+        print(combined_sparse.features.shape)
+        print(combined_sparse.indices.shape)
         # input_tensor_sparse.indices = torch.cat(
         #    [input_tensor_sparse.indices, h_cur.indices], dim=1)
 
