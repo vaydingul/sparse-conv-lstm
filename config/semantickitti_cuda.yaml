@@ -19,7 +19,7 @@ model_params:
   num_class: 20
   num_input_features: 16
   use_norm: True
-  init_size: 16
+  init_size: 32
 
 ###################
 ## Dataset options
@@ -64,5 +64,5 @@ train_params:
   model_save_path: "./models/model_checkpoint.pt"
   checkpoint_every_n_steps: 1
   max_num_epochs: 10
-  eval_every_n_steps: 1
+  eval_every_n_steps: 5000
   learning_rate: 0.001

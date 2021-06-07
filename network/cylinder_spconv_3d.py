@@ -68,7 +68,7 @@ class cylinder_asym(nn.Module):
 
         sparse_features, predictions = self.cylinder_3d_spconv_seg(
             features_3d, coords, batch_size)
-
+        print(sparse_features.features.shape)
         coords = coords.int()
 
         sparse_features_ = [sparse_features.features[coords[:, 0] == i]
