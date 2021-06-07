@@ -42,11 +42,11 @@ def build(model_config):
                               out_pt_fea_dim=out_fea_dim,
                               fea_compre=num_input_features)
 
-    sparse_conv_lstm_net = SparseConvLSTM(input_dim = 128,
+    sparse_conv_lstm_net = SparseConvLSTM(input_dim = 64,
                                           hidden_dim=num_class,
                                           spatial_shape=output_shape,
                                           kernel_size = (3, 3, 3),
-                                          num_layers = 2)
+                                          num_layers = 1)
 
     # The general model architecture will be the one in the 
     # model_params/model_architecture, e.g. cylinder_asym
