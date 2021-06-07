@@ -67,7 +67,7 @@ class SemKITTI_sk(data.Dataset):
         # Read the raw binary file
         raw_data = np.fromfile(
             self.im_idx[index], dtype=np.float32).reshape((-1, 4))
-        #print(self.im_idx[index])
+        print(self.im_idx[index])
         if self.imageset == 'test':
             annotated_data = np.expand_dims(
                 np.zeros_like(raw_data[:, 0], dtype=int), axis=1)
