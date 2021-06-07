@@ -154,7 +154,7 @@ def main(args):
 
         
 
-            if global_iter % check_iter == 0: # and epoch >= 1:
+            if global_iter % check_iter == 0 and epoch >= 1:
 
                 #* ############  VALIDATION SET validation ##########################
                 # Set the evaluation/inference mode for the model!
