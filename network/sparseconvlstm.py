@@ -43,7 +43,7 @@ class SparseConvLSTMCell(nn.Module):
                                              bias=self.bias,
                                              indice_key="LSTMCell",
                                              use_hash=False)
-        print(self.sparse_conv)
+        print(self.sparse_conv.__dict__)
         '''
         self.conv = nn.Conv2d(in_channels=self.input_dim + self.hidden_dim,
                               out_channels=4 * self.hidden_dim,
